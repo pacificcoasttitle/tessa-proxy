@@ -11,7 +11,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 app.post('/api/ask-tessa', async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, max_tokens, temperature } = req.body;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -20,9 +20,10 @@ app.post('/api/ask-tessa', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo',
+        model: 'gpt-4o',
         messages,
-        temperature: 0.2
+        max_tokens: max_tokens || 2000,
+        temperature: temperature !== undefined ? temperature : 0.3
       })
     });
 
@@ -32,6 +33,18 @@ app.post('/api/ask-tessa', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error processing your request' });
+  }
+});
+
+// Transfer tax data proxy (fixes CORS issue)
+app.get('/data.json', async (req, res) => {
+  try {
+    const response = await fetch('https://pacificcoasttitle.onrender.com/data.json');
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('Transfer tax data error:', err);
+    res.status(500).json({ error: 'Unable to fetch transfer tax data' });
   }
 });
 
